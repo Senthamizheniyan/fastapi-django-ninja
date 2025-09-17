@@ -1,0 +1,147 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Django Ninja - Books CRUD</title>
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+  <style>
+    input { margin: 4px; }
+  </style>
+</head>
+<body>
+  <h1>Django Ninja API — Books</h1>
+
+  <form id="add-form">
+    <input id="title" placeholder="Title" required>
+    <input id="author" placeholder="Author" required>
+    <button type="submit">Add</button>
+  </form>
+
+  <ul id="books"></ul>
+
+<script>
+  // CSRF helper: read csrftoken cookie
+  function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== "") {
+      const cookies = document.cookie.split(";");
+      for (let i = 0; i < cookies.length; i++) {
+        const cookie = cookies[i].trim();
+        if (cookie.substring(0, name.length + 1) === (name + "=")) {
+          cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+          break;
+        }
+      }
+    }
+    return cookieValue;
+  }
+  const csrftoken = getCookie("csrftoken");
+
+  // ensure X-CSRFToken for non-GET requests
+  $.ajaxSetup({
+    beforeSend: function(xhr, settings) {
+      if (!/^(GET|HEAD|OPTIONS|TRACE)$/.test(settings.type)) {
+          xhr.setRequestHeader("X-CSRFToken", csrftoken);
+      }
+    }
+  });
+
+  const API_BASE = "/api";
+
+  function renderBook(book) {
+    return $(`
+      <li id="book-${book.id}">
+        <span class="view-mode">
+          <strong class="title">${book.title}</strong> by <span class="author">${book.author}</span>
+          <button class="edit-btn">Edit</button>
+          <button class="delete-btn">Delete</button>
+        </span>
+      </li>
+    `).data("book", book);
+  }
+
+  function loadBooks() {
+    $.get(API_BASE + "/books", function(data) {
+      $("#books").empty();
+      data.forEach(b => {
+        const $li = renderBook(b);
+        $("#books").append($li);
+      });
+    });
+  }
+
+  // add book
+  $("#add-form").submit(function(e) {
+    e.preventDefault();
+    const payload = {
+      title: $("#title").val(),
+      author: $("#author").val()
+    };
+    $.ajax({
+      url: API_BASE + "/books",
+      method: "POST",
+      contentType: "application/json",
+      data: JSON.stringify(payload),
+      success() {
+        $("#title").val(""); $("#author").val("");
+        loadBooks();
+      }
+    });
+  });
+
+  // delegate edit/delete clicks
+  $("#books").on("click", ".delete-btn", function() {
+    const id = $(this).closest("li").attr("id").split("-")[1];
+    $.ajax({
+      url: API_BASE + `/books/${id}`,
+      type: "DELETE",
+      success: loadBooks
+    });
+  });
+
+  $("#books").on("click", ".edit-btn", function() {
+    const $li = $(this).closest("li");
+    const book = $li.data("book");
+    // replace with edit form
+    const $edit = $(`
+      <span class="edit-mode">
+        <input class="edit-title" value="${book.title}">
+        <input class="edit-author" value="${book.author}">
+        <button class="save-btn">Save</button>
+        <button class="cancel-btn">Cancel</button>
+      </span>
+    `);
+    $li.find(".view-mode").hide();
+    $li.append($edit);
+  });
+
+  $("#books").on("click", ".cancel-btn", function() {
+    const $li = $(this).closest("li");
+    $li.find(".edit-mode").remove();
+    $li.find(".view-mode").show();
+  });
+
+  $("#books").on("click", ".save-btn", function() {
+    const $li = $(this).closest("li");
+    const id = $li.attr("id").split("-")[1];
+    const payload = {
+      title: $li.find(".edit-title").val(),
+      author: $li.find(".edit-author").val()
+    };
+    $.ajax({
+      url: API_BASE + `/books/${id}`,
+      type: "PUT",
+      contentType: "application/json",
+      data: JSON.stringify(payload),
+      success: function(updated) {
+        // refresh list
+        loadBooks();
+      }
+    });
+  });
+
+  // initial load
+  loadBooks();
+</script>
+</body>
+</html>
