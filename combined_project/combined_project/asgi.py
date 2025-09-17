@@ -29,6 +29,6 @@ from starlette.applications import Starlette
 
 # Combine Django and FastAPI
 application = Starlette(routes=[
-    Mount("/fastapi", app=fastapi_app),
+    Mount("/FastApi", app=fastapi_app),
     Mount("/", app=WSGIMiddleware(django_asgi_app)),
 ])
