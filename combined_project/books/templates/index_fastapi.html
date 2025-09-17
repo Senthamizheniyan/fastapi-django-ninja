@@ -18,7 +18,10 @@
   <ul id="books"></ul>
 
 <script>
-  const API_URL = "http://127.0.0.1:8001";
+    const API_URL = "/fastapi";
+
+  {% comment %} const API_URL = "http://127.0.0.1:8001"; {% endcomment %}
+
 
   function renderBook(book) {
     return $(`
