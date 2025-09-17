@@ -25,7 +25,7 @@ SECRET_KEY = 'django-insecure-5%esy@6jxq)e5-96tx_^v(e-jjvj9*7#zn_w@5z%t@gpm$1w=$
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ["*",'fastapi-django-ninja.onrender.com']
 
 
 # Application definition
